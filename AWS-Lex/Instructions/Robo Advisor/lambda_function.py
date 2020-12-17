@@ -78,6 +78,50 @@ def close(session_attributes, fulfillment_state, message):
     }
 
     return response
+    
+### Investment Portfolio Recommendation - per risk tolerance ###
+def get_investment_recommendation(risk_level):
+    """
+    Returns an investment recommendation based on the selected risk level for bot's response 
+    """
+    initial_risk_levels = {
+        "none": "100% bonds (AGG), 0% equities (SPY)",
+        "very low": "80% bonds (AGG), 20% equities (SPY)",
+        "low": "60% bonds (AGG), 40% equities (SPY)",
+        "medium": "40% bonds (AGG), 60% equities (SPY)",
+        "high": "20% bonds (AGG), 80% equities (SPY)",
+        "very high": "0% bonds (AGG), 100% equities (SPY)",
+    }
+    return risk_levels[initial_risk_levels.lower()]
+
+
+### User Input Validation ###
+def input_validation(age,investment_amount,intent_request):
+    """
+    Validates the input data for age and investment amount
+    """
+    # check if age has value or not
+    if age is not None:
+        age = parse_int(age)
+        # The age should be greater than zero and less than 65.
+        # Check if age >=65
+        if age >= 65:
+            return build_validation_result(False, "age",
+            "The age should be greater than zero and less than 65 for such portfolio recomendation,"
+            " please provide a valid age.", )
+        # Check if age <0
+        elif age < 0:
+            return build_validation_result(False, "age",
+            "The age is invalid for such portfolio recomendation,"
+            " please provide a valid age.", )        
+
+    # the investment_amount should be equals to or greater than 5000.
+    if investment_amount if not None:
+        investment_amount = parse_int(investment_amount)
+        if investment_amount <5000:
+            return build_validation_result(False, "investment_amount",
+            "The investment amount should be equal to or greater than $5000,"
+            " please provide a valid investment amount .", )
 
 
 ### Intents Handlers ###
@@ -97,9 +141,21 @@ def recommend_portfolio(intent_request):
         # Use the elicitSlot dialog action to re-prompt
         # for the first violation detected.
 
-        ### YOUR DATA VALIDATION CODE STARTS HERE ###
+        # Get the slots
+        slots = get_slots(intent_request)
 
-        ### YOUR DATA VALIDATION CODE ENDS HERE ###
+        #Validate user input for age and investment amount 
+        validation = input_validation(age,investment_amount,intent_request)
+        # if return an invalid information, then go to elicit slot funtion
+        if not validation["isValid"]:
+            slots[validation["violatedSlot"]] = None
+            return elicit_slot(
+                intent_request["sessionAttributes"],
+                intent_request["currentIntent"]["name"],
+                slots,
+                validation["violatedSlot"],
+                validation["message"],
+            )
 
         # Fetch current session attibutes
         output_session_attributes = intent_request["sessionAttributes"]
