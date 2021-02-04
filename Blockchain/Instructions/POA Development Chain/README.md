@@ -30,15 +30,15 @@ To do this, you will create and submit four deliverables:
 
     * `./geth --datadir node1 account new`
     * `./geth --datadir node2 account new`
-    ![Setup-1-node](/Images/Geth Command.jpg)
-    ![Setup-2-nodes](/Images/node 2 created.jpg)
+    ![Setup-1-node](../Images/Geth Command.jpg)
+    ![Setup-2-nodes](../Images/node 2 created.jpg)
     
 
 2. Create Genesis Block: 
     * Create a new project directory for your new network. Call it whatever you want!
 
     * Create a "Screenshots" folder inside of the project directory.
-    ![Inside-folder](/Images/within folder.jpg)
+    ![Inside-folder](../Images/within folder.jpg)
 
     * Run `puppeth`, name your network, and select the option to configure a new genesis block.
 
@@ -52,8 +52,8 @@ To do this, you will create and submit four deliverables:
     * Complete the rest of the prompts, and when you are back at the main menu, choose the "Manage existing genesis" option.
 
     * Export genesis configurations. This will fail to create two of the files, but you only need `newnet.json`.
-    ![Process-1](/Images/Environment setup.jpg)
-    ![Process-2](/Images/Environment setup.jpg)
+    ![Process-1](../Images/Environment setup.jpg)
+    ![Process-2](../Images/Environment setup.jpg)
 
 3. Network Configuration
     * Export genesis configurations. This will fail to create two of the files, but you only need `networkname.json`.
@@ -63,8 +63,8 @@ To do this, you will create and submit four deliverables:
     * Screenshot the `puppeth` configuration once complete and save it to the Screenshots folder.
 
     * Initialize each node with the new `networkname.json` with `geth`.
-    ![Initialization-1](/Images/Initialization for node 1.jpg)
-    ![Initialization-1](/Images/Initialization for node 2.jpg)
+    ![Initialization-1](../Images/Initialization for node 1.jpg)
+    ![Initialization-1](../Images/Initialization for node 2.jpg)
     
 
     * Run the first node, unlock the account, enable mining, and the RPC flag. Only one node needs RPC enabled.
@@ -74,7 +74,7 @@ To do this, you will create and submit four deliverables:
     * Be sure to unlock the account and enable mining on the second node!
 
     * You should now see both nodes producing new blocks, congratulations!
-    ![Connection-nodes](/Images/node 1 and 2 connecting.jpg)
+    ![Connection-nodes](../Images/node 1 and 2 connecting.jpg)
 
     * Blocktime: 15 mins, which is the default block time.
     * Chain ID: 111
@@ -89,18 +89,18 @@ To do this, you will create and submit four deliverables:
 
 * You will need to use a custom network, and include the chain ID, and use ETH as the currency.
 
-![custom-node](/Images/custom setup.jpg)
+![custom-node](../Images/custom setup.jpg)
 
 * Import the keystore file from the `node1/keystore` directory into MyCrypto. This will import the private key.
 
 * Send a transaction from the `node1` account to the `node2` account.
-![confirmation-txn](/Images/confirmation.jpg)
+![confirmation-txn](../Images/confirmation.jpg)
  
 * Copy the transaction hash and paste it into the "TX Status" section of the app, or click "TX Status" in the popup.
 
 * Screenshot the transaction metadata (status, tx hash, block number, etc) and save it to your Screenshots folder.
-![status-txn](/Images/full transaction status.jpg)
+![status-txn](../Images/full transaction status.jpg)
 
 * Celebrate, you just created a blockchain and sent a transaction!
 
-![transaction-success](/Images/submitted transaction in gitbash.jpg)
+![transaction-success](../Images/submitted transaction in gitbash.jpg)
