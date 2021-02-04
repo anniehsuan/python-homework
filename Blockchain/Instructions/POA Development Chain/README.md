@@ -52,7 +52,7 @@ To do this, you will create and submit four deliverables:
     * Complete the rest of the prompts, and when you are back at the main menu, choose the "Manage existing genesis" option.
 
     * Export genesis configurations. This will fail to create two of the files, but you only need `newnet.json`.
-    ![Process-1](../Images/Environment_setup.jpg)
+    ![Process-1](Images/Environment_setup.jpg)
 
 3. Network Configuration
     * Export genesis configurations. This will fail to create two of the files, but you only need `networkname.json`.
@@ -73,7 +73,7 @@ To do this, you will create and submit four deliverables:
     * Be sure to unlock the account and enable mining on the second node!
 
     * You should now see both nodes producing new blocks, congratulations!
-    ![Connection-nodes](../Images/node_connecting.jpg)
+    ![Connection-nodes](Images/node_connecting.jpg)
 
     * Blocktime: 15 mins, which is the default block time.
     * Chain ID: 111
@@ -88,18 +88,18 @@ To do this, you will create and submit four deliverables:
 
 * You will need to use a custom network, and include the chain ID, and use ETH as the currency.
 
-![custom-node](../Images/custom_setup.jpg)
+![custom-node](Images/custom_setup.jpg)
 
 * Import the keystore file from the `node1/keystore` directory into MyCrypto. This will import the private key.
 
 * Send a transaction from the `node1` account to the `node2` account.
-![confirmation-txn](../Images/confirmation.jpg)
+![confirmation-txn](Images/confirmation.jpg)
  
 * Copy the transaction hash and paste it into the "TX Status" section of the app, or click "TX Status" in the popup.
 
 * Screenshot the transaction metadata (status, tx hash, block number, etc) and save it to your Screenshots folder.
-![status-txn](../Images/full_transaction_status.jpg)
+![status-txn](Images/full_transaction_status.jpg)
 
 * Celebrate, you just created a blockchain and sent a transaction!
 
-![transaction-success](../Images/submitted_transaction_in_gitbash.jpg)
+![transaction-success](Images/submitted_transaction_in_gitbash.jpg)
