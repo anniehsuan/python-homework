@@ -30,8 +30,8 @@ To do this, you will create and submit four deliverables:
 
     * `./geth --datadir node1 account new`
     * `./geth --datadir node2 account new`
-    ![Setup-1-node](../Images/Geth Command.jpg)
-    ![Setup-2-nodes](../Images/node 2 created.jpg)
+    ![Setup-1-node](https://github.com/anniehsuan/python-homework/tree/master/Blockchain/Instructions/POA%20Development%20Chain/Images/Geth Command.jpg)
+    ![Setup-2-nodes](https://github.com/anniehsuan/python-homework/tree/master/Blockchain/Instructions/POA%20Development%20Chain/Images/node 2 created.jpg)
     
 
 2. Create Genesis Block: 
