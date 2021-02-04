@@ -30,15 +30,15 @@ To do this, you will create and submit four deliverables:
 
     * `./geth --datadir node1 account new`
     * `./geth --datadir node2 account new`
-    ![Setup-1-node](/Images/Geth_Command.jpg)
-    ![Setup-2-nodes](/Images/node_2_created.jpg)
+    ![Setup-1-node](Images/Geth_Command.jpg)
+    ![Setup-2-nodes](Images/node_2_created.jpg)
     
 
 2. Create Genesis Block: 
     * Create a new project directory for your new network. Call it whatever you want!
 
     * Create a "Screenshots" folder inside of the project directory.
-    ![Inside-folder](../Images/within_folder.jpg)
+    ![Inside-folder](Images/within_folder.jpg)
 
     * Run `puppeth`, name your network, and select the option to configure a new genesis block.
 
@@ -62,8 +62,8 @@ To do this, you will create and submit four deliverables:
     * Screenshot the `puppeth` configuration once complete and save it to the Screenshots folder.
 
     * Initialize each node with the new `networkname.json` with `geth`.
-    ![Initialization-1](../Images/Initialization_node1.jpg)
-    ![Initialization-1](../Images/Initialization_node2.jpg)
+    ![Initialization-1](Images/Initialization_node1.jpg)
+    ![Initialization-1](Images/Initialization_node2.jpg)
     
 
     * Run the first node, unlock the account, enable mining, and the RPC flag. Only one node needs RPC enabled.
