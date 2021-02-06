@@ -1,5 +1,5 @@
 # Unit 18 | Case Study Blockchain
-![logo](blockchainmind-3.jpg =250x250)
+![logo](blockchainmind-3.jpg)
 ## About the Company
 BlockchainMind is a Toronto based company that provides custom blockchain solutions - security and infrastructure solutions for Cryptocurrencies and Distributed Ledger Technologies for individuals and companies. The company specializes in the following aspects:
 1. Cryptocurrency Exchange and Wallet
