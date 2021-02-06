@@ -1,5 +1,5 @@
 # Unit 18 | Case Study Blockchain
-![logo](/blockchainmind-3.jpg)
+![logo](blockchainmind-3.jpg)
 ## About the Company
 BlockchainMind is a Toronto based company who provides the custom blockchain solutions - security and infrastructure solutions for Cryptocurrencies and Distributed Ledger Technologies for individuals and companies. The company specializes in the following aspects:
 1. Cryptocurrency Exchange and Wallet
@@ -26,7 +26,7 @@ A rough assumption of BlockchainMind's potential business revenue: as of June 20
 
 
 ## Resources
-![Company Website](https://www.blockchainmind.com/product-services)
-![Top Blockchain Companies in Toronto (2021)](https://df.media/these-are-the-top-blockchain-companies-in-toronto-2021/)
-![Crunchbase Info](https://www.crunchbase.com/organization/blockchain-mind)
-![How blockchain supercharges digital transformation](https://medium.com/@BijouConcierge/how-blockchain-supercharges-digital-transformation-c0b2f4d5656c)
+[Company Website](https://www.blockchainmind.com/product-services)
+[Top Blockchain Companies in Toronto (2021)](https://df.media/these-are-the-top-blockchain-companies-in-toronto-2021/)
+[Crunchbase Info](https://www.crunchbase.com/organization/blockchain-mind)
+[How blockchain supercharges digital transformation](https://medium.com/@BijouConcierge/how-blockchain-supercharges-digital-transformation-c0b2f4d5656c)
