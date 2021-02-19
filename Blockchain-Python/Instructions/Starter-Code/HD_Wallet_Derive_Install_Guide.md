@@ -30,19 +30,19 @@ For those with a **Windows operating system**, execute the following steps:
 
 1. Windows machines do not come with a pre-built PHP and Apache Web Server, and therefore will require both. Luckily, some installers bundle these two together! Visit the [XAMPP website](https://www.apachefriends.org/index.html) and download the installer for Windows; the XAMPP is a popular PHP development environment that is easy to install and configure. Be sure to download version 7, as version 8 can cause issues with the `hd-wallet-derive` library.
 
-      <img alt=XAMPP-website src=Images/download_xampp.gif width=700>      
+       
 
 2. Use the XAMPP package to install PHP and its associated dependencies. Keep the defaults for now unless there is a dependency conflict.
 
-    <img alt=XAMPP-install src=Images/XAMPP-install.png width=350>
+   
 
 3. Then, once the XAMPP package is installed, navigate to the folder where the PHP binaries are located. This should be at `C:\xampp\php`.
 
-    <img alt=xampp-path src=Images/xampp-path.png width=700>
+    
 
 4. Edit the `php.ini` file (`C:\xampp\php\php.ini`) using Notepad and add the following line at the end of the file: `extension=php_gmp.dll`. This will enable a necessary PHP extension that `hd-wallet-derive` relies on.
 
-   <img alt=edit-php-ini.gif src=Images/edit-php-ini.gif width=700>
+   
 
 5. Next, you need to update the System Environment Variables and add the path containing the PHP binaries (`C:\xampp\php`) to the `PATH` environment variable.
 
@@ -50,15 +50,15 @@ For those with a **Windows operating system**, execute the following steps:
 
       * In the Cortana search field, type in CMD; you will see the Command Prompt application in the search results, choose the "Run as administrator" option to continue.
 
-        <img alt=Open-CMD-as-Admin src=Images/cmd-as-admin.png width=700>
+        
 
       * You will be asked if you want the Command Prompt to make changes in your system, click on the "Yes" button to continue.
 
-        <img alt=Open-CMD-as-Admin-2 src=Images/cmd-as-admin-2.png width=400>
+      
 
       * You will be able to run commands as administrator if you see the title `Administrator: Command Prompt` in the window. In the administrator's prompt, it’ll say `Administrator`, while other prompts will not.
 
-        <img alt=Open-CMD-as-Admin-3 src=Images/cmd-as-admin-3.png width=700>
+
 
 7. In this new terminal, type the following command to update the `PATH` system variable.
 
@@ -68,7 +68,7 @@ For those with a **Windows operating system**, execute the following steps:
 
 8. If everything was successful, you will see a confirmation message.
 
-   !<img alt=Open-CMD-as-Admin-4 src=Images/cmd-as-admin-4.png width=700>
+ 
 
 9. Test that the newest version of PHP is working. Close all the terminal windows (`git-bash` and Windows Command Prompt), open a new `git-bash` terminal windows, and execute the following command.
 
@@ -78,7 +78,7 @@ For those with a **Windows operating system**, execute the following steps:
 
 10. If you see the following output, then congratulations! Your machine is now updated to the newest version of PHP!
 
-    <img alt=Open-CMD-as-Admin-5 src=Images/cmd-as-admin-5.png width=700>
+  
 
  ### Troubleshooting
 
@@ -96,7 +96,7 @@ For those with a **Windows operating system**, execute the following steps:
 
   5. Finish by clicking `OK` on each window.
 
-  <img alt=System-Properties-Add-environment-Variable src=Images/windows-set-environment_variables.png width=700>
+  
 
 </details>
 
@@ -109,8 +109,7 @@ For those using **macOS**, execute the following steps:
 1. macOS users will need to update their machine's prebuilt version of PHP to the full version using a package manager for macOS called Homebrew.
 
 2. To do this, visit the [Homebrew website](https://brew.sh/) and install Homebrew using the given install command.
-   
-   <img alt=homebrew-install src=Images/homebrew-install.png width=700>
+
 
 3. Once Homebrew is installed, execute the following command in your terminal. This should install the latest version of PHP (7.3 at this current time).
 
@@ -144,7 +143,7 @@ For those using **macOS**, execute the following steps:
 
 7. If you see the following output, then congratulations! Your machine is now updated to the newest version of PHP!
 
-   <img alt=PHP-macOS-install-3 src=Images/php-os-x-3.png width=700>
+   
 
 </details>
 
@@ -162,7 +161,7 @@ With the latest version of PHP installed on our machines, we can now proceed to 
     
     * **This step is required or the installation will fail!**
 
-    * <img alt=bash-exe.png src=Images/bash-exe.png height=500>
+   
 
 2. With your terminal open as indicated for your operating system, cd into your `Blockchain-Tools folder and run the following code:
 
@@ -190,7 +189,7 @@ With the latest version of PHP installed on our machines, we can now proceed to 
 
 3. If installation was successful, you should see output similar to what you see in the following image:
 
-   <img alt=hd-wallet-derive-execute src=Images/hd-wallet-derive-execute.png width=700>
+   
 
 </details> 
 <br>

@@ -183,7 +183,7 @@ w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 - Include installing pip dependencies using `requirements.txt`, as well as cloning and installing `hd-wallet-derive`.
   You may include the `hd-wallet-derive` folder in your repo, but still include the install instructions. You do not
   need to include Python or PHP installation instructions.
-- For more php and hd wallet derive installation, please see the[blockchain installation guide](Blockchain_TX_Install_Guide.md) and [HD wallet installation guide](HD_Wallet_Derive_Install_Guide.md) 
+- For more php and hd wallet derive installation, please see the [blockchain installation guide](Blockchain_TX_Install_Guide.md) and [HD wallet installation guide](HD_Wallet_Derive_Install_Guide.md) 
 
 
 ### Challenge Mode
