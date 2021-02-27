@@ -51,19 +51,28 @@ Next, create the following functions:
 * `deposit` — This function should be set to `public payable` check, ensuring that only the owner can call the function.
 
 * Create a fallback function using `function() external payable`, and call the `deposit` function from within it. This will ensure that the logic in `deposit` executes if ether is sent directly to the contract. This is important to prevent ether from being locked in the contract, since we don't have a `withdraw` function in this use case.
+
+Original transaction balances are:
 ![Before Transaction](Images/Before.jpg)
+
+Remix setting with three accounts deployment:
 ![Remix Deployment](Images/remix.jpg)
 #### Test the contract
 
 In the `Deploy` tab in Remix, deploy the contract to your local Ganache chain by connecting to `Injected Web3` and ensuring MetaMask is pointed to `localhost:8545`.
-![Remix Testing 10 ETH](Images/10eth.jpg)
-![Transaction Hash](Images/Hash.jpg)
-You will need to fill in the constructor parameters with your designated `employee` addresses.
 
+Testing wth 10 ETH on Remix local host:
+![Remix Testing 10 ETH](Images/10eth.jpg)
+
+Here is the transaction hash:
+![Transaction Hash](Images/Hash.jpg)
+
+You will need to fill in the constructor parameters with your designated `employee` addresses.
 Test the `deposit` function by sending various values. Keep an eye on the `employee` balances as you send different amounts of ether to the contract and ensure the logic is executing properly.
 
-
+Get Balance Verification: 
 ![Verification Balance](Images/verify.jpg)
+Updated transaction balances are:
 ![After Transaction](Images/After.jpg)
 
 The `AssociateProfitSplitter` Contract is completed successully!
