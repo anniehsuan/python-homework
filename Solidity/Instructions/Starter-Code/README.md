@@ -71,8 +71,11 @@ You will need to fill in the constructor parameters with your designated `employ
 Test the `deposit` function by sending various values. Keep an eye on the `employee` balances as you send different amounts of ether to the contract and ensure the logic is executing properly.
 
 Get Balance Verification: 
+
 ![Verification Balance](Images/verify.jpg)
+
 Updated transaction balances are:
+
 ![After Transaction](Images/After.jpg)
 
 The `AssociateProfitSplitter` Contract is completed successully!
