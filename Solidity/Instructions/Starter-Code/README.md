@@ -42,10 +42,10 @@ While developing and testing your contract, use the [Ganache](https://www.truffl
 ### Level One: The `AssociateProfitSplitter` Contract
 
 At the top of your contract, you will need to define the following `public` variables and constructor
-[Payables and constructor ](Images/payable.jpg)
+![Payables and constructor ](Images/payable.jpg)
 
 Next, create the following functions:
-[Functions](Images/fn.jpg)
+![Functions](Images/fn.jpg)
 * `balance` — This function should be set to `public view returns(uint)`, and must return the contract's current balance. Since we should always be sending ether to the beneficiaries, this function should always return `0`. If it does not, the `deposit` function is not handling the remainders properly and should be fixed. This will serve as a test function of sorts.
 
 * `deposit` — This function should be set to `public payable` check, ensuring that only the owner can call the function.
