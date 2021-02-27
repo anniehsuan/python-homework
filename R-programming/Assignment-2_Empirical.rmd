@@ -1,0 +1,509 @@
+---
+Title: Assignment 2
+fontsize: 12pt
+output:
+  word_document: default
+  pdf_document:
+    df_print: kable
+  html_document:
+    df_print: paged
+---
+
+```{r include=FALSE}
+## Imports
+library(tidyverse)
+library(readxl)
+library(dynlm)
+library(urca)
+library(lmtest)
+library(stargazer)
+library(tseries)
+```
+
+## Question 1
+### Data Cleaning
+```{r echo=FALSE}
+## Import data
+rgdp = read_excel("CanadaRGDP.xlsx")
+head(rgdp)
+```
+First, we add a column called `lnGDP` and convert `Period` to date-time
+```{r echo=FALSE}
+rgdp$lnGDP = log(rgdp$GDP)
+```
+
+Convert `Period` to a workable date-time format and add the lag. Now, the dataset looks like this.
+```{r echo=FALSE}
+rgdp$Period = as.yearqtr(format(rgdp$Period), "Q%q %Y")
+rgdp$laggedlnGDP = lag(rgdp$lnGDP, 1)
+head(rgdp)
+```
+
+\newpage
+### (a)
+Now, graph it. We observe that the trend is between that of a positive linear function and a log function. There's no clear structural breaks and that it appears to be stationary. 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+## Time series plot
+ggplot(data=rgdp, aes(x=Period, y=lnGDP))+geom_line(color='steelblue')+ggtitle("Quarterly Canada Real GDP")+theme_classic()+theme(plot.title=element_text(hjust=0.5))
+```
+
+```{r echo=FALSE}
+lnGDP.ts = ts(rgdp$lnGDP)
+acf(lnGDP.ts, lag.max=233)
+```
+The log level of real GDP is clearly upward trended and a time trend should therefore be included. Per correlgram, it appears that there is a positive auto-correlation until a certain point between 50 and 100 lags, indicating the shock will last for years. Then, it changes to a negative auto-correlation, where the mean reversion takes place. It is also noticeable that auto correlations for the change in the logarithm of real GDP will also be positive.
+
+### (b)
+First, we estimate the autoregressive function. The estimated regression equation we get is $\hat{RGDP_t} = 0.007715  + 0.9938  RGDP_{t-1}$.
+```{r echo=FALSE}
+ar.ols(lnGDP.ts, order.max=1, dmean=F, Intercept=T)
+```
+
+Now, we estimated the mean-adjusted auto-regressive function. 
+The estimated regression equation we get is $\hat{RGDP_t} = 0.007715  + 0.9938  RGDP_{t-1}$. As the estimated regression function is the exact same, the model is stable.
+```{r echo=FALSE}
+MAlnGDP = lnGDP.ts - mean(lnGDP.ts)
+ar.ols(MAlnGDP, order.max=1, dmean=F, Intercept=T)
+```
+As the coefficients of both models are close to  1, it is believed that the variable, log level of real GDP, appears non-stationary, indicating that error terms will accumulate and Yt will blow up either.
+
+\newpage
+### (c)
+We fit a model with time trend. The output below is for the model $\Delta GDP_t = \beta_0+\delta GDP_{t-1}+\mu t + u_t$, where the coefficient for `z.lag.1` corresponds with $\delta$ and the coefficient for `tt` corresponds with $\mu$. There is definitely a trend here as $\delta$ can be rejected at 5% significance when compared to the DF test statistic. 
+```{r include=FALSE}
+rgdp.c = ur.df(lnGDP.ts, type="trend", lags=0, selectlags="BIC")
+summary(rgdp.c)
+```
+
+```{r echo=FALSE}
+plot(rgdp.c)
+```
+
+The blue bands in the correlogram below represent values beyond which the autocorrelations are significantly different from zero at 5% significance. For most lags beyond the second lag, the autocorrelation does not exceed the band or only marginally exceed the band. We probably should take a look at the lags of the first and two.The graphs show that there is a positive auto-correlation yet negative partial auto-correlation.
+
+Per ACF correlogram, autocorrelation is probably not significant after the 1st or 2nd lag. Thus, AR(1) or AR(2) is more appropriate.
+
+Now, we de-trend using residuals and show the ACF and PACF for the de-trended series.
+```{r echo=FALSE, out.width = '95%'}
+trend=seq_along(log(rgdp$GDP))
+model_fit= lm(log(GDP)~trend, data=rgdp)
+
+resid.ts <-ts(residuals(model_fit))
+acf(resid.ts, lag.max=40)
+pacf(resid.ts, lag.max=40)
+```
+
+\newpage
+### (d)
+```{r include=FALSE}
+dlnGDP.ts = ts(rgdp$lnGDP - rgdp$laggedlnGDP)
+dlnGDP.ts
+```
+
+```{r echo=FALSE, out.width='95%'}
+## Correlogram of all the lags
+acf(na.omit(dlnGDP.ts), lag.max=233, main="Sample Autocorrelation for Quarterly Canada Real GDP")
+pacf(na.omit(dlnGDP.ts), lag.max=233, main="Sample Autocorrelation for Quarterly Canada Real GDP")
+```
+The blue bands in the correlogram below represent values beyond which the autocorrelations are significantly different from zero at 5% significance. For most lags beyond the third lag, the autocorrelation does not exceed the band or only marginally exceed the band. We probably should take a look at the lags of the first few.
+
+The graphs show that there is a positive auto-correlation: the shock will last for a few quarters.Yet, the PACF correlogram indicates a non-significant negative partial auto-correlation, which indicate that the mean-reversion effects from intermediate days are not that significant.
+```{r echo=FALSE}
+acf(na.omit(dlnGDP.ts), lag.max=20, main="First 20 Sample Autocorrelation for Quarterly Canada Real GDP")
+```
+Autocorrelation probably not significant after the 3rd or 4th lag. Thus, AR(3) or AR(4) is more appropriate.
+
+### (e)
+We compute the AIC and BIC for p = 0, 1, 2, 3, 4, based on the model in part C. We need to write the model in another way so that it is in a regression class. First we write our own function for a custom output.
+```{r}
+## Write a criteria function
+IC <- function(model) {
+  
+  ssr = sum(model$residuals^2)
+  t = length(model$residuals)
+  npar = length(model$coef) 
+  
+  return(
+    round(c("p" = npar - 1,
+          "AIC" = log(ssr/t) + npar * 2/t,
+          "BIC" = log(ssr/t) + npar * log(t)/t,
+          "R2" = summary(model)$r.squared), 4)
+  )
+}
+```
+
+```{r}
+# apply the IC() to an intercept-only model of GDP growth
+IC(dynlm((dlnGDP.ts) ~ 1))
+```
+
+```{r}
+
+# loop IC over models of different orders
+order <- 1:4
+
+ICs <- sapply(order, function(x) 
+        "AR" = IC(dynlm(dlnGDP.ts ~ L(lnGDP.ts, 1:x))))
+ICs
+```
+
+Then we show the output. Model selection criteria suggests 2 lags.  
+```{r include=FALSE}
+# select the AR model with the smallest BIC
+ICs[, which.min(ICs[2, ])]
+```
+
+## Question 2
+### (a)
+The graph shows a strong positive autocorrelation for the inflation rate level, indicating level of the inflation rate will persist for quite a while.However, we suspect that the Canadian inflation rate might have a stochastic trend. It also appears a break taking place around 1982.
+
+Taking a look at the data prior to 1982, the level of inflation rate had never returned to the original point, which supports our suspicion of stochastic trend. To further demonstrate it, the Dickey-Fuller test of trend and intercept can be conducted.
+
+
+### (b)
+T-statistic is -2 = -0.1/0.05, which is smaller in absolute terms than DF critical values of 2.86 at 5% of significance. Thus, we fail to reject the null of stationary variable and conclude that there is a random walk for inflation. 
+
+Robust standard errors are not required. When adding the lag of variable, we already eliminate the effect of autocorrelation in error terms.
+It doesn't mean  we should use 4 lags because the data is quarterly.Yet, we should determine the number of lags to use by computing the BIC and/or AIC for each p, and then selecting the p that minimizes the absolute value of the information criteria. As BIC is more consistent compared to AIC, it is more likely for us to apply BIC in terms of choosing the numbers of lags.
+
+### (c)
+We are given the following data
+```{r echo=FALSE}
+QInf = data.frame('Quarter' = c('1999:I', '1999:II', '1999:III', '1999:IV', '2000:I'), 'UrateCt' = c(7.7, 7.9, 7.7, 7, 6.8), 'Inft' = c(0.8, 4.3, 2.9, 1.3, 2.1), 'Inft-1' = c(0.8, 0.8, 4.3, 2.9, 1.3), 'cInft' = c(0, 3.5, -1.4, -1.5, 0.8))
+QInf
+```
+
+The calculations are as follow:
+```{r}
+## AR(1)
+pred.ar1 = 0.002-0.31*(-1.5)
+inf.ar1 = 1.3 + pred.ar1
+error.ar1 = inf.ar1 - 2.1
+
+## AR(4)
+pred.ar4 = 0.02-0.46*(-1.5)-0.39*(-1.4)-0.25*3.5+0.03*0
+inf.ar4 = 1.3 + pred.ar4
+error.ar4 = inf.ar4 - 2.1
+
+## ADL(4, 1)
+pred.adl = 1.279-0.51*(-1.5)-0.44*(-1.4)-0.30*3.5-0.02*0-0.16*7
+inf.adl = 1.3 + pred.adl
+error.adl = inf.adl - 2.1
+```
+
+The results are as follow:
+```{r echo=FALSE}
+data.frame('Metric' = c('Predicted Change in Inflation', 'Predicted Inflation', 'Forecast Error'), 'AR(1)' = c(pred.ar1, inf.ar1, error.ar1), 'AR(4)' = c(pred.ar4, inf.ar4, error.ar4), 'ADL(4, 1)' = c(pred.adl, inf.adl, error.adl))
+```
+
+
+### (d)
+Perform a test on whether or not Canadian unemployment rates Granger-cause the Canadian inflation rate.
+Per ADL(4,1) model, t-statistic of 2.29 (ABS(-0.16/0.07)) on the coefficient of Canadian unemployment rate is the only restriction. We can apply t^2 as F-statistics = 5.22, which is greater than the critical value. Therefore, we can reject the null hypothesis that the coefficient on Canadian unemployment rates is zero; namely that Canadian unemployment rates does Granger cause the Canadian inflation rate and simultaneously serves the purpose of predictive content.
+
+
+## Question 3-1
+```{r include=FALSE}
+## Import data
+Driving = read_excel("Driving.xlsx")
+head(Driving)
+```
+
+### (a)
+The average percent of accidents resulting in at least a fatality is 0.8856%.
+```{r}
+mean(Driving$prcfat)
+```
+
+### (b)
+The regression of prcfat on a linear time trend, 11 monthly dummies, wkends, unem, spdlaw, and beltlaw: 
+```{r echo=FALSE}
+prcfat_ltr = glm(prcfat~t+wkends+unem+spdlaw+beltlaw+feb+mar+apr+may+jun+jul+aug+sep+oct+nov+dec, data=Driving)
+summary(prcfat_ltr)
+```
+Based on the results, the higher state unemployment rate decreases the percent of fatal accidents by 0.01543. With the p-value of 0.0066,this is a statistically significant effect. This may be because the higher state unemployment rate will reduce the economics activity, and then probably decrease the chance of an accident results in a fatality.
+
+The higher speed limits, the higher the percent of fatal accidents, which increased by 0.06709 percentage points. This is also a statistically significant effect because of the very small p-value(0.00156).  
+
+Lastly, the implementation of seat belt law is estimated to decrease the percent of fatal accidents by 0.02951 with the p-value of 0.2073.  
+
+### (c)
+(c) 
+To test the errors for AR(1) serial correlation, we conduct the Durbin-Waston statistic:
+H0: $\rho$  = 0 (no serial correlation)
+H1: $\rho$ $\neq$ 0 (there is serial correlation)
+```{r echo=FALSE}
+dwtest(prcfat_ltr, data = Driving)
+```
+The result above shows that the Durbin-Waston d-statistic is 1.43,which is between 0 and d-lower (1.522 with n=100 & k=1). As a result, we reject the null and conclude that there is autocorrelation. 
+
+### (d) 
+Compute the first order autocorrelations for `unem` and `prcfat`.
+```{r echo=FALSE}
+Unemp = acf(na.omit(Driving$unem), plot = F, lag.max = 5,type='partial')
+prcfatp = acf(na.omit(Driving$prcfat), plot = F, lag.max = 5,type='partial')
+Unemp
+prcfatp
+```
+The first order autocorrelation for unem and prcfat are 0.941 and 0.708 respectively. For `unem` it is pretty high, so its very possible that there's a unit root. It is not as high for `prcfat`, so concerns about a unit root there are not as significant.
+
+### (e) 
+Estimate the model in (b) using first differences for unem and prcfat   
+```{r echo=FALSE}
+diunem= diff(Driving$unem, difference=1)
+diprcfat=diff(Driving$prcfat, difference=1)
+new_driving <- Driving[-c(1),]
+new_driving$disprcfat <- diprcfat
+new_driving$disunem <- diunem
+prcfat_ltr_e <-lm(disprcfat~t+wkends+disunem+spdlaw+beltlaw+feb+mar+apr+may+jun+jul+aug+sep+oct+nov+dec, data= new_driving)
+summary(prcfat_ltr_e)
+```
+After replacing the orginal unem and prcfat with the first difference, we found that the sign of coefficient for spdlaw and beltlaw become negatvie and positive respectively. This conflicts the result in part(b) and it does no make sense. Moreover, the multiple R-squared drops to 0.3436 from 0.7174. Therefore, we conclude that the change in prcfat cannot be explained by the change in unem or any of the policy variables. 
+
+## Question 3 - 2
+### (a)
+To test if ltotacc has unit root, we conduct the hypothesis test as follows:
+H0: $\delta$  = 0
+H1: $\delta$ < 0
+```{r echo=FALSE}
+summary(ur.df(Driving$ltotacc, 
+              type = "drift", 
+              lags = 0, 
+              selectlags = "Fixed"))
+```
+The t value is -3.3105,which is smaller than the t = -3.136 at 2.5%. Therefore, we reject the null and conclude that ltotacc does not have a unit root at 2.5%.
+
+### (b) 
+Repeat (a) with two lagged changes and conduct the ADF test as follows:
+H0: $\delta$  = 0
+H1: $\delta$ < 0
+```{r echo=FALSE}
+summary(ur.df(Driving$ltotacc, 
+              type = "drift", 
+              lags = 2, 
+              selectlags = "Fixed"))
+```
+The t value with two lagged change is -1.5015,which becomes bigger than the t = -3.136 at 2.5%. Therefore, we cannot reject the null, and we conclude that ltotacc has a unit root at 2.5% with two lagged changes.
+
+### (c) 
+Add a linear trend and repeat (b), we conduct the ADF test again as follows:
+H0: $\delta$  = 0
+H1: $\delta$ < 0
+```{r echo=FALSE}
+TT <- 108
+ltotacc_trend <- Driving$ltotacc + 1:TT
+summary(ur.df(ltotacc_trend, 
+              type = "trend", 
+              lags = 2, 
+              selectlags = "Fixed"))
+```
+We look at the first t-statistic at the bottm, which is -3.6658. This is slightly bigger than the critical value at 2.5% (-3.683). Therefore, we cannot reject the null , and we conclude that ltoacc still has a unit root after adding a linear trend. 
+
+### (d) 
+Compared the results from parts a-c, ltotacct has unit root with either two lagged changes or even a linear time trend. Therefore, the best characterization seems to be suggested by the regression in part(c).
+
+### (e) Repeat (a-d) for prcfat
+#### a.
+```{r echo=FALSE}
+summary(ur.df(Driving$prcfat, 
+              type = "drift", 
+              lags = 0, 
+              selectlags = "Fixed"))
+```
+The t value is -4.216, which is smaller than the t = -3.136 at 2.5%. Therefore, we reject the null and conclude that prcfat does not have a unit root at 2.5%.
+
+#### b.
+```{r echo=FALSE}
+summary(ur.df(Driving$prcfat, 
+              type = "drift", 
+              lags = 2, 
+              selectlags = "Fixed"))
+```
+The t value with two lagged change is -4.7445, which is still smaller than the t = -3.136 at 2.5%. Therefore, we  reject the null again, and conclude that prcfat does not have a unit root at 2.5% with two lagged changes.
+
+#### c.
+```{r echo=FALSE}
+TT <- 108
+prcfat_trend <- Driving$prcfat + 1:TT
+summary(ur.df(prcfat_trend, 
+              type = "trend", 
+              lags = 2, 
+              selectlags = "Fixed"))
+```
+The first t-statistic at the bottm is -5.2882, which is smaller than the critical value at 2.5% (-3.683). Therefore, we reject the null and conclude that prcfat still does not have a unit root after adding a linear trend. 
+
+#### d.
+Unlike ltoacc, prcfat does not have a unit root in any cases. The evidence is strong no matter we included two lagged change/ a linear time trend in our regression or not.
+
+## Question 4
+Dataset is as follow:
+```{r echo=FALSE}
+## File import
+PCurve = read_excel('PCurve.xlsx')
+head(PCurve)
+```
+
+### (a)
+We got to estimate the level of unemployment on the levels of inflation. That is, run OLS with `inf` as response variable and `unem` as explanatory variable. The interpretation directly from this is that 1% increase in unemployment rate is related to 0.5024% increase in inflation rate. This positive relationship is weird and against economic theories. That is, we estimated the equation $inf_t = 1.0536 + 0.5024unem_t$. Then, the natural rate of unemployment, $\mu_0$ cannot be estimated using this regression.
+```{r echo=FALSE}
+PCurve.a = glm(inf~unem, data=PCurve)
+summary(PCurve.a)
+```
+
+### (b)
+Run the Durbin-Watson test on the model from (a). We reject the null, meaning that autocorrelation is indeed present in the OLS model from part (a).
+```{r echo=FALSE}
+dwtest(PCurve.a)
+```
+
+### (c)
+Now, we estimate the adaptive expectations model using `cinf` and `unem`. Obtain the regression equation $\Delta inf_t = 2.8282 - 0.5176unem_t$
+```{r echo=FALSE}
+PCurve.c = glm(cinf~unem, data=PCurve)
+summary(PCurve.c)
+```
+
+Then, check for autocorrelation using Durbin-Watson. We cannot reject the null that autocorrelation exists, so there's no evidence that there's autocorrelation in these residuals.
+```{r echo=FALSE}
+dwtest(PCurve.c)
+```
+
+For reference, the implied natural rate of unemployment is 5.464%.
+```{r}
+2.8282/0.5176
+```
+
+### (d)
+Now, we estimate the adaptive expectations model using `cinf` and `cunem` based on the alternative model.Obtain the regression equation $\Delta inf_t = -0.07214 - 0.83281\Delta unem_t$. In a, both intercept and slope are positive while in d they are both negative. The model in part a suggests that unemployment rate is positively related to inflation (at 10% significance), which seems to be against the theoretical framework that higher unemployment leads to lower inflation (deflationary pressure). d is essentially a regression on the first derivative, which suggests that increases in unemployment is related to decreased inflation. This would fit the theoretical framework.
+```{r echo=FALSE}
+PCurve.d = glm(cinf~cunem, data=PCurve)
+summary(PCurve.d)
+```
+
+Is there autocorrelation? No.
+```{r echo=FALSE}
+dwtest(PCurve.d)
+```
+
+### (e)
+Summary of the result as follow:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+stargazer(PCurve.a, PCurve.c, PCurve.d, title="Regression Results", align=TRUE, type="text")
+```
+A is obviously not accurate, because the residuals showed autocorrelation. The residuals in C & D have no such issues. Choosing between C or D require us to test whether or not a unit root is present in `unem`. If a unit root is present, then D is better. We run a Dickey-Fuller test with no lags to see whether we need a unit root.
+
+
+## Question 5
+US Income and Australian exports: Exogeneity is unlikely to hold perfectly here because Australia and the United States trade with each other, so there's simultaneous causality. A decline in Australian exports could lead to Austrlians having less income, that reduces their imports from America, which in turn reduces the US income. US Income can be exogenous if we decide that this effect is not strong enough to significantly affect US income.
+
+Oil prices and inflation: Exogeneity is most unlikely to hold here, since oil prices is set based on a bunch of economic indicators, including the inflation rate of oil-consuming countries as it relates to real purchasing power. It is most likely endogenous.
+
+Monetary policy and inflation: They are most likely endogenous too. One of the things used to determine interest rate/target rate is inflation and expected inflation. Often, changes in monetary policy is based upon expectations of inflationary or deflationary pressure in the market. Therefore, they are endogenous.
+
+Phillips Curve: The Phillips curve is a regression of the change in inflation on lagged changes in inflation and lagged unemployment rates. It is not exogenous because past unemployment is determined by past inflation, so there's again simultaneous causality. 
+
+In general, it is very difficult to find examples of distributed lag regressions in economics because economic data are often observed data from societal behaviour and not randomized data from a controlled experiment. As society is interconnected, it is very difficult to not have simultaneous causality.
+
+
+## Question 6
+```{r include=FALSE}
+## Importing data
+S_P = read_excel("SP.xlsx")
+S_P
+```
+
+### (a)
+To test if lnSP500 = ln(SP500) and lnip = ln(ip) have unit root, we conduct the hypothesis test as follows. We conduct the test with both drift and trend to encompass all possibilities:
+H0: $\delta$  = 0
+H1: $\delta$ < 0
+```{r echo=FALSE}
+l_sp500 = log(S_P$sp500)
+l_ip =log(S_P$ip)
+summary(ur.df(l_sp500, 
+              type = "drift", 
+              lags = 4, 
+              selectlags = "Fixed"))
+summary(ur.df(l_sp500, 
+              type = "trend", 
+              lags = 4, 
+              selectlags = "Fixed"))
+summary(ur.df(l_ip, 
+              type = "drift", 
+              lags = 4, 
+              selectlags = "Fixed"))
+summary(ur.df(l_ip, 
+              type = "trend", 
+              lags = 4, 
+              selectlags = "Fixed"))
+
+```
+Based on the results, the ADF statistic for lnSP500 without trend is -0.7936 and t = -2.2012 with a trend.These all above the 5% critical value, which is -2.86 and -3.41 for without and with trend respectively. As for lnip, the ADF statistic without trend and wtih trend are -1.3717 and -2.5186 respectively. These are not closing to rejcting at 5% critical value. As a result, we fail to reject the null for both lnSP500 and lnip, and conclude that they both have unit root.
+
+### (b)
+(b) Run a regression of lnSP500 on lnip.
+```{r echo=FALSE}
+regre <- lm(l_sp500 ~ l_ip)
+summary(regre)
+```
+The t-statistic for lnip is 71.97. With such a small p-value, we can concludes that lnip has significant effect on lnSP500. In addition, the multiple and adjusted R-squared are both above 0.9, means that the goodness-of-fit is high.
+
+### (c)
+To test whether the residual of the regression in part (b) is unit root. we conduct the hypothesis test as follows:
+H0: $\delta$  = 0
+H1: $\delta$ < 0
+```{r}
+re <- residuals(regre)
+cbdf <- adf.test(re, k=0)
+summary(ur.df(re, type = "drift", lags = 2, selectlags = "Fixed"))
+cbdf
+```
+The t-statistic for DF and ADF are -1.1512 and -1.5726 respectively, which is all above the 5% critical value (-2.86). Therefore, we fail to reject the null and conclude that the residual of the regression in part(b) is unit root. 
+
+### (d)
+We add a time trend to the regression and redo part (c) based on part(b). 
+```{r echo=FALSE}
+t = seq_along(l_sp500)
+model_fit =lm(l_sp500~t+l_ip, data=S_P)
+summary(model_fit)
+dre <- residuals(model_fit)
+dbdf <- adf.test(dre, k=0)
+summary(ur.df(dre, type = "drift", lags = 2, selectlags = "Fixed"))
+dbdf
+```
+After adding the time trend to regression, the t-statistic for DF and ADF become -1.5409 and -1.8766 respectively, which is still all above the 5% critical value (-2.86). Therefore, we fail to reject the null and conclude that the residual of the regression in part(b) is unit root. In other words, lnSP500 and lnip are not cointegrated even with a time trend.
+
+### (e)
+The results above shows that there is no cointegration of lnSP500 and lnip even with a linear time trend. Therefore, we conclude that there is no long time equilibrium relationship between stock market and economic activity.
+
+## Question 7
+### (a)
+If money and government expenditures are exogenous, then we can use a distributed lag model to estimate the multipliers. The coefficients on the money variables represent the cumulative dynamic monetary multiplier for that period, and the coefficients on the fiscal variables represent the cumulative dynamic fiscal multipliers for that period. They are the cumulative multipliers, and not the dynamic multipliers because the regression was conducted on first differences.
+
+The long-run cumulative dynamic monetary multiplier is 0.425, and 0.018 is the long-run cumulative dynamic fiscal multiplier.
+```{r echo=FALSE}
+multipliers = data.frame('lags' = c(1, 2, 3, 4), 'CumDynamicMonetaryMultiplier' = c(0.006, 0.235, 0.344, 0.385), 
+              'CumDynamicFiscalMultiplier' = c(0.17, -0.044, -0.003, -0.079), 
+               'Total' = c(0.006+0.17, 0.235-0.044, 0.344-0.003, 0.385-0.079))
+multipliers
+```
+
+We can use a t-test to test for the significance of coefficients of these multipliers using HAC standard errors. Rejection criteria is the same as usual.
+
+\newpage
+### (b)
+```{r include=FALSE}
+## Change data to long format
+multipliers.b = multipliers %>% gather(Type, Multiplier, CumDynamicMonetaryMultiplier:CumDynamicFiscalMultiplier)
+multipliers.b
+```
+
+We plot from the data earlier.
+```{r echo=FALSE, out.width='90%'}
+ggplot(data=multipliers.b, aes(x=lags, y=Multiplier, colour=Type))+geom_line()+ylab('Cumulative Dynamic Multiplier')
+```
+
+
+### (c)
+It is unlikely to be the case because both monetary and fiscal policy decisions take into account a number of the same factors such as current and future expected output growth, therefore making them endogenous.
+
+

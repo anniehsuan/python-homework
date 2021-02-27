@@ -1,0 +1,447 @@
+---
+title: "Assignment 1 Empirical Output"
+fontsize: 12pt
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    df_print: kable
+---
+## Question 1
+```{r message=TRUE, warning=TRUE, paged.print=TRUE}
+## Imports
+library(tidyverse)
+library(readxl)
+library(haven)
+library(AER)
+```
+
+```{r message=FALSE, warning=FALSE}
+loanapp = read_excel("Q1_partial.xlsx", col_types = "numeric")
+head(loanapp)
+```
+
+### (a)
+Since the variable `approve` takes the value 1 if mortgage is approved and 0 if it is not, we expect the coefficient on `white` to be <b>positive</b>, as we expect the probability of approval to be higher for white people.
+
+### (b)
+We run a simple OLS with `approve` as the dependent variable and `white` as the explanatory variable. The OLS results is shown below:
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+## OLS
+loanapp.b = lm(approve~white, data=loanapp)
+summary(loanapp.b, type='HC1')
+```
+As the coefficient of `white` is positive, we conclude that white people have 20.06% higher chances of mortgage approval compared to those who are not white, holding all else constant. The coefficient of the slope is also positive. However, the interpretation of the slope is not logical because `approve` is a binary variable. 
+
+To test if it is statistically significant, we conduct a t-test with the following hypotheses: 
+$H_0: \beta_1 = 0$  
+$H_1: \beta_1 \neq 0$ 
+
+According to the result, the p-value for the slope coefficient is practically 0. Therefore, we reject the null hypothesis and conclude that the slope coefficient is practically large, and statistically significant. 
+
+
+### (c)
+We add the other variables listed and run the OLS again, with the output as follow:
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+loanapp.c = glm(approve~white+hrat+obrat+loanprc+unem+male+married+dep+sch+cosign+chist+pubrec+mortlat1+mortlat2+vr, data=loanapp)
+summary(loanapp.c, type='HC1')
+```
+The coefficient on `white` dropped to 0.1288 from 0.2006 since the introduction of the control variables essentially meant that the some of the impact of `white` on `approve` are captured by the control variables. 
+
+To test if there is discrimination against non-whites, we conduct the following test:
+
+$H_0: \beta_{white} = 0$  
+$H_1: \beta_{white}\neq 0$
+
+The p-value of white coefficient is still practically 0 albeit larger than before. We reject the null and conclude that there exists statistically significant evidence to conclude discrimination against non-whites. Being white has 12.88% higher chances of mortgage approval compared to those who are not white, holding all else constant.
+
+### (d)
+We run a probit with only `white` as the explanatory variable. The output is as follow:
+```{r message=FALSE, warning=FALSE}
+loanapp.d = glm(approve~white, data=loanapp, family=binomial(link="probit"))
+summary(loanapp.d, type='HC1')
+```
+For being white, the probability of loan approval slight decreases from 90.84% drop to 90.82%. On the contrary, the probability of loan approval increases from 70.78% to 70.88% for non-whites by using probit model. 
+
+To determine if probit model is significant or not, we conduct a similar t-test as before on the slope coefficient. The p-value is still practically 0, so we reject the null and conclude that probit model is significant. Unexpectedly, there is indeed statistically strong evidence to suggest discrimination against non-whites.
+
+### (e)
+We add the same control variables as (c) and fit another probit.
+```{r message=FALSE, warning=FALSE}
+loanapp.e = glm(approve~white+hrat+obrat+loanprc+unem+male+married+dep+sch+cosign+chist+pubrec+mortlat1+mortlat2+vr, data=loanapp, family=binomial(link='probit'))
+summary(loanapp.e, type='HC1')
+```
+To figure out if there is discrimination against non-whites, we conduct a hypothesis testing as follow:
+
+$H_0: \beta_{white} = 0$  
+$H_1: \beta_{white} \neq 0$
+
+The p-value of white coefficient is again, practically 0 up till the 8th decimal place, so we reject the null and conclude that there is discrimination against non-whites. Being white has higher chances of mortgage approval compared to those who are not white, holding all else constant. However, since the model is non-linear, we cannot calculate the difference in estimation between the two models as they are different at each combination of explanatory variables.
+
+### (f)
+We run a logit with the same control variables as (e). The output is as follow:
+```{r message=FALSE, warning=FALSE}
+loanapp.f = glm(approve~white+hrat+obrat+loanprc+unem+male+married+dep+sch+cosign+chist+pubrec+mortlat1+mortlat2+vr, data=loanapp, family=binomial(link='logit'))
+summary(loanapp.f, type='HC1')
+```
+Comparing the coefficient on white to probit estimate,`white` is still statistically significant and positive. However, we are not able to directly compare the impact of `white` on `approve` with only the coefficient due to the different specifications of logit and probit.
+
+### (g)
+To compare the size of the discrimination effect between probit and logit, we construct three test groups.
+
+The first group consists of dummy variables that are all zero and non-dummy variables taking the mean value. The second group has dummy variables equal to 1 and non-dummy variables taking the mean value. All variables other than `white` in the third group is set to its mean. Then, holding all other variables constant, we calculate the discrimination effect by setting `white` to 1 and 0 for each case, finding the predicted probabilities for all test cases in both the probit (part e) and logit models (part f), and then finding the difference in predicted probabilities for each test case. 
+
+For the "Zeroes" test case, Being whites has 16.58% chance to get loan approval than non-whites by using probit model (65.55% for non-whites and 82.13% for whites). As for the logit model, the probability will increase 17.61% for being white (64.942% for non-whites and 82.55% for whites).
+
+For the "Ones" test case the difference between whites and non-whites increases to 20.45% and 22.93% for probit and logit models respectively.
+
+Lastly, for the "Means" test case, the result is totally contrary. Being whites has 10.6% higher probability than non-white by using probit model while the difference is only 9.7% for logit model.
+
+In brief, the size of the discrimination effect is larger for logit model when we assume all dummy variables are either 0 or 1 and logit model has smaller size of the discrimination effect by adopting mean for all variables. The reason behind this result can be explained by non-linearity.
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+## Fit dataframe
+white.g = c(0, 1, 0, 1, 0, 1)
+hrat.g = mean(loanapp$hrat)
+obrat.g = mean(loanapp$obrat)
+loanprc.g = mean(loanapp$loanprc)
+unem.g = mean(loanapp$unem)
+male.g = c(0, 0, 1, 1, mean(loanapp$male, na.rm=TRUE), mean(loanapp$male, na.rm=TRUE))
+married.g = c(0, 0, 1, 1, mean(loanapp$married, na.rm=TRUE), mean(loanapp$married, na.rm=TRUE))
+dep.g = mean(loanapp$dep, na.rm=TRUE)
+sch.g = c(0, 0, 1, 1, mean(loanapp$sch, na.rm=TRUE), mean(loanapp$sch, na.rm=TRUE))
+cosign.g = c(0, 0, 1, 1, mean(loanapp$cosign, na.rm=TRUE), mean(loanapp$cosign, na.rm=TRUE))
+chist.g = c(0, 0, 1, 1, mean(loanapp$chist), mean(loanapp$chist))
+pubrec.g = c(0, 0, 1, 1, mean(loanapp$pubrec), mean(loanapp$pubrec))
+mortlat1.g = c(0, 0, 1, 1, mean(loanapp$mortlat1), mean(loanapp$mortlat2))
+mortlat2.g = c(0, 0, 1, 1, mean(loanapp$mortlat2), mean(loanapp$mortlat2))
+vr.g = c(0, 0, 1, 1, mean(loanapp$vr), mean(loanapp$vr))
+predictframe.g = data.frame(white=white.g, hrat=hrat.g, obrat=obrat.g, loanprc=loanprc.g, unem=unem.g, male=male.g, married=married.g, dep=dep.g, sch=sch.g, cosign=cosign.g, chist=chist.g, pubrec=pubrec.g, mortlat1=mortlat1.g, mortlat2=mortlat2.g, vr=vr.g)
+predictframe.g
+```
+
+Fit with Probit.
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+probit.predict1 = predict(loanapp.e, newdata=predictframe.g, type='response')
+probit.probs1 = data.frame(white=white.g, case=c('Zeroes', 'Zeroes', 'Ones', 'Ones', 'Means', 'Means'), probability=probit.predict1)
+probit.probs1
+```
+
+Fit with Logit
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+logit.predict1 = predict(loanapp.f, newdata=predictframe.g, type='response')
+logit.probs1 = data.frame(white=white.g, case=c('Zeroes', 'Zeroes', 'Ones', 'Ones', 'Means', 'Means'), probability=logit.predict1)
+logit.probs1
+```
+
+Discrimination effect
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+data.frame(Case=c('Zeroes', 'Ones', 'Means'), Probit=c(0.8213212-0.6554800, 0.5688162-0.3643359, 0.9230845-0.8170743), Logit=c(0.8255063-0.6493866, 0.5831745-0.3538988, 0.9249905-0.8280339))
+```
+
+
+## Question 2
+```{r}
+library(haven)
+marriage = read_dta("Q2.dta")
+head(marriage)
+```
+
+We fit a logit model as follow:
+```{r message=FALSE, warning=FALSE}
+marriage.log = glm(happymar~church+female+educ, data=marriage, family=binomial(link='logit'))
+summary(marriage.log, type='HC1')
+```
+
+### (a)
+$H_0: \beta_{church} = 0$  
+$H_1: \beta_{church} \neq 0$
+
+The coefficient of `church` is 2.9075 with p-value 0.00159. As the p-value is less than 1%, we can reject the null hypothesis and conclude that coefficient of `church` is significant at 1%.
+
+$H_0: \beta_{female} = 0$  
+$H_1: \beta_{female} \neq 0$
+
+The coefficient of `female` is 2.3945 with p-value 0.00634. As the p-value is less than 1%, we can reject the null hypothesis and conclude that coefficient of `female` is significant at 1%.
+
+$H_0: \beta_{educ} = 0$  
+$H_1: \beta_{educ} \neq 0$
+
+The coefficient of `educ` is 0.5267 with p-value 0.04699. As the p-value is less than 5% but more than 1%, we can only reject the null hypothesis and conclude that coefficient of `female` is significant at 5%.
+
+Therefore, the determinants of happiness are `church`, `female` and `educ`, and the signs of these three variables appear positive, indicating that all three of `church`, `female` and `educ` positively affect the probability of marital happiness, `happymar`. 
+
+
+### (b)
+Best to create a new dataframe with all the variables needed. The columns `church`, `female`, `educ` are inputs, `log-odds` are estimates from the model, and `odds` is calculated from `log-odds`. Likewise, `P(Happy)` is derived from `odds`.
+```{r}
+## Creating the input vectors for `church`, `female` and `educ`, and putting them in a dataframe
+church.b = c(0, 1, 0, 1)
+female.b = c(0, 0, 1, 1)
+educ.b = c(8, 8, 16, 16)
+predictframe = data.frame(church=church.b, female=female.b, educ=educ.b)
+predictframe
+```
+
+```{r}
+## Vector of the predicted probability of being happy
+marriage.pred = predict(marriage.log, newdata=predictframe, type='response')
+marriage.pred
+```
+
+```{r}
+## Obtaining the odds
+marriage.odds = marriage.pred / (1-marriage.pred)
+marriage.odds
+```
+
+```{r}
+## Obtaining the log-odds
+marriage.log.odds = log(marriage.odds)
+marriage.log.odds
+```
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+## Putting everything in a dataframe
+marriage.b = cbind(predictframe, data.frame(`log-odds`=marriage.log.odds, odds=marriage.odds, `P(Happy)`=marriage.pred))
+marriage.b
+```
+
+Thus, the above table summarizes the results of log odds, odds and probability of marital happiness for the following individuals:  
+(1) A male with 8 years of education who does not go to church regularly  
+(2) A male with 8 years of education who goes to church regularly  
+(3) A female with 16 years of education who does not go to church regularly  
+(4) A female with 16 years of education who goes to church regularly  
+
+## (c)
+To calculate McFadden's Pseudo R2, we need to first fit the model with no explanatory variables.
+```{r message=FALSE, warning=FALSE}
+marriage.null = glm(happymar~1, data=marriage, family=binomial(link='logit'))
+summary(marriage.null, type='HC1')
+```
+Then, we calculate McFadden's Pseudo-R by applying the equation, which is defined as $1 - \frac{log(Lfull)}{log(Lnull)}$. 
+```{r}
+PseudoR2 = 1 - logLik(marriage.log)/logLik(marriage.null)
+PseudoR2
+```
+The result shows that Pseudo-R2 is 0.3823251, which is greater than the benchmark of 0.2~0.3. Pseudo-R2 represents that approximately 38% of variation in `happymar` is explained by `church`, `female` and `educ`. It appears that the full model with predictors, `church`, `female` and `educ`, provides reasonable predictions of `happymar`.
+
+## (d)
+Run the updated logit with an additional interaction variable `cheducx`. The output is as follow:
+```{r message=FALSE, warning=FALSE}
+marriage.d = glm(happymar~church+female+educ+cheducx, data=marriage, family=binomial(link='logit'))
+summary(marriage.d, type='HC1')
+```
+
+$H_0: \beta_{cheducx} = 0$  
+$H_1: \beta_{cheducx} \neq 0$
+
+The coefficient of `cheducx` is 0.5493 with p-value of 0.19520. As the p-value is much greater than 5%, we cannot reject the null hypothesis and thus conclude that coefficient of `cheducx` is insignificant at 5%. That is, there's no significant interaction effect between `church` and `educ`. 
+
+The insignificance is possibly caused by the fact that `cheducx` is closely related to `educ` as it is an unavoidable and dependent interaction. Therefore, to test whether `cheducx` and `educ` are independent, it is essential to perform a likelihood ratio test between model without interaction, `cheducx`, and model with interaction `cheducx`. The result is as follow:
+```{r message=FALSE, warning=FALSE}
+anova(marriage.log, marriage.d, test='LRT')
+```
+It is not significant since the p-value of chi-squared distribution with df=1 is 0.3626, which is greater than 5% of significance level. The two models, with and without `cheducx`, are not statistically different. That is, `cheducx` does not improve the model in a statistically significant way. This result is consistent with the p-value on the coefficient on `cheducx` from the logit.
+
+The test-statistic is computed by the equation of $-2*log(L_{full}) + 2*log(L_{reduced})$. The test statistic is essentially a magnified log-ratio of the likelihoods of the reduced model and the full model, and since it is sufficiently small (can't be rejected against a null of 0), we conclude that `cheducx` does not improve the predictability of the model.
+```{r}
+-2*logLik(marriage.log) + 2*logLik(marriage.d)
+```
+
+## Question 3
+### (a)
+Given that $\beta_{YX} = \frac{Cov(Y,X)}{Var(X)}$, $\beta_{YZ} = \frac{Cov(Y,Z)}{Var(Z)}$, and $\beta_{XZ} = \frac{Cov(X,Z)}{Var(Z)}$, we can derive a consistent estimator of $\beta_1$ from the "reduced form" as follows: 
+
+To construct a consistent estimator of $\beta_1$, we need to show that an exogenous change in $x_i$ is associated with a change in $Y_i$ so that the effect on Y of an exogenous unit change in X is $\beta_1$.
+
+From the regression result, we can calculate the regression lines 
+$X_i = \beta_{0XZ} + \beta_{XZ} \times Z_i + e_{XZ}$  
+$Y_i = \beta_{0XZ} + \beta_{YZ} \times Z_i + e_{YZ}$ 
+
+Where $e_{XZ}$ and $e_{YZ}$  are the error terms, and $Z_i$ is uncorrelated with $e_{XZ}$ and $e_{YZ}$ by definition. 
+
+
+Next, rearrange the X equation to solve for Z:
+
+$Z_i= -\frac{\beta_{0XZ}}{\beta_{XZ}} + \frac{1}{\beta_{XZ}}X_i- \frac{1}{\beta_{XZ}}{e_{XZ}}$
+
+Then substitute Z into the Y equation and collect terms
+
+$Y_i$  
+
+= $\beta_{0YZ} + \beta_{YZ}Zi + e_{YZ}$
+
+= $\beta_{0YZ} +\beta_{YZ}(-\frac{\beta_{0XZ}}{\beta_{XZ}} + \frac{1}{\beta_{XZ}}X_i- \frac{1}{\beta_{XZ}}{e_{XZ}}) + e_{YZ}$  
+
+= $(\beta_{0YZ} - \beta_{0XZ} \frac{\beta_{YZ}}{\beta_{XZ}}) + \frac{\beta_{YZ}}{\beta_{XZ}}X_i + (e_{YZ} - \frac{\beta_{YZ}}{\beta_{XZ}}e_{XZ})$  
+
+= $\beta_0+ \beta_1X_i+ e_{YX}$  
+
+Thus, $\hat{\beta_0}= \beta_{0YZ}-\beta_{0XZ}\frac{\beta_{YZ}}{\beta_{XZ}}$, $\hat{\beta_1}= \frac{\beta_{YZ}}{\beta_{XZ}}$, and $\hat{e_{YX}}= e_{YZ} -\frac{\beta_{YZ}}{\beta_{XZ}}e_{XZ}$ 
+
+From above derivation, we know in the regression model  $\beta_1= \frac{Cov(Y,Z)}{Cov(X,Z)}$. When the sample size is greater than 100, $\hat{\beta_1} = \frac{\beta_{YZ}}{\beta_{XZ}} = \frac{\hat{Cov(Y,Z)}}{\hat{Cov(X,Z)}}$, or the fraction of sample covariances. We know that sample covariances are consistent estimators of population covariance, therefore the ratio of them is also consistent. Additionally, the interpretation is that an exogenous change in $X_i$ of $\beta_{XZ}$ units is associated with a change in $Y_i$ of $\beta{YZ}$ units when the sample size is large. The effect on $Y$ of an exogenous unit change in $X$ is $\hat{\beta_1}$ = $\frac{\beta_{YZ}}{\beta_{XZ}}$.
+
+Therefore, $\hat{\beta_1}$ is a consistent estimator of $\beta_1$.
+
+### (b)
+$\hat{\beta_1}$ is a coefficient estimator of TSLS = SYZ/SXZ = $\frac{\sum_{i=1}^n Y_i(Zi-\bar{Z})}{\sum_{i=1}^n X_i(Zi-\bar{Z})}$
+Then, substitute in $Yi$= = $\beta_0$+ $\beta_1$$Xi$+ $e.YX$, multiply through n^1/2 and simplify:
+
+We get Var($\hat{\beta_1}$) = $\frac{Var[(Zi-\bar{Z})*e_{YX}]}{n[Cov(X_i,Z_i)]^2}$, the variance of TSLS coefficient estimator 
+whereas the variance of OLS estimator is, Var($\hat{\beta_1}$) = $\frac{Var(e.YX)}{\sum_{i=1}^n (Xi-\bar{X})}$.
+
+Therefore, as shown in part a, it appears that the $\hat{\beta_1}$ is a consistent estimator of standard IV estimator, $\beta_1$ with the sample expected value. As for the variance of the calculated estimator, it is biased against the variance of OLS estimator as proved in part B. The main reason is because we isolate  the part of X that is uncorrelated with the error term in the first stage of TSLS calculation to solve the endogenous.It is also noticeable that the COV(X,Z) should be much greater than 0 so that application of central limit theorem is applicable and the statistical inferences are reasonably following the approximate normal distribution.
+
+## Question 4
+### (a)
+We know that labour demand is dependent on real wage while labour supply is simply a straight line. Then, the general equations are as follow:
+$L_D(w) = \alpha_0 + \alpha_1w + e_d$  
+$L_S = \beta_0 + e_s$  
+where $w$ is real wage, and $e_d$ and $e_s$ are the error terms for labour demand and labour supply respectively.
+
+### (b)
+$\hat{\beta_0}$ is simply the mean of labour in the sample, since it is not dependent on any other explanatory variables. Therefore, the equation can be estimated as:
+$L_S = \bar{L}$
+
+### (c)
+Want to show that $cov(w, e_d) \neq 0$. That is, we want to show that $w$ can be written as a function of $e_d$.
+
+Since labour market clears, $L_D(w) = L_S$ holds. That is,  
+
+$\alpha_0 + \alpha_1w + e_d = \beta_0 + e_s$  
+
+Rearranging the above and isolating for w gives:  
+
+$w = -\frac{\alpha_0}{\alpha_1} + \frac{\beta_0}{\alpha_1} + \frac{e_s}{\alpha_1} - \frac{1}{\alpha_1}e_d$  
+
+Let $-\frac{\alpha_0}{\alpha_1} + \frac{\beta_0}{\alpha_1} + \frac{e_s}{\alpha_1} = \gamma$, then:  
+
+$w(e_d) = \gamma - \frac{1}{\alpha_1}e_d$
+
+$w$ can be written as a function of $e_d$, which is a random variable. Therefore, it follows that $cov(w, e_d) \neq 0$.
+
+### (d)
+We should not estimate the labour demand equation using OLS if real wage is indeed endogenous. Instead we should use fit an 2SLS to remove the endogeity issue. The endogenous explanatory variable would violate the exogeneity assumptions of the Gauss-Markov theorem of OLS. Continued use of OLS models in this case would lead to biased estimators and poor predictions as the expected value from the model would deviate from the true expected value of our parameter (labour quantity). An OLS model in this case should not be used for any policy recommendations.
+
+### (e)
+We would need to select an instrument that shifts labour supply but not labour demand. Labour participation rate of females is an obvious choice. It definitely increases labour supply (though total effect is countered by other variables) but there's no reason to think that it shifts demand in any way (i.e. employers need to hire similar number of workers regardless of how many women are in the workforce), therefore it is exogenous and not correlated with $e_d$
+
+It is also relevant, as higher labour participation rate of females lead to lower real wage on its own given the influx of supply in the labour market.
+
+
+## Question 5
+### Importing data
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+spending = read_dta('spending.dta')
+head(spending)
+```
+
+### (a)
+The coefficient should be positive for `democrat`, `vote_1` and `lispend`. Democrats won the election, so the votes and two-party votes should increase if the candidate belongs to democrat party.  
+
+The Higher the previous vote share, the higher two-party votes and votes. It is an indication that people have been willing to vote for this candidate. It also deters the entrance of a good inter-party challenger.
+
+Same for the incumbent spending because the more incumbent spendings mean that the candidate has more money for campaign, resulting in the higher votes and two-party votes.
+
+As for `hq` and `lcspend`,the coefficient for them should be negative.
+
+The Higher the challenger quality, the lower two-party votes and votes. There are few possible reasons behind it. Firstly,a good challenger could run as an independent, therefore splitting the votes of the two main parties. Also, a tough primary battle could damage the incumbent in the press for the general election. Lastly, people may think that there must be a lot of people vote for this god challenger, so it doesn't matter if they go to vote or not, which results in the lower two-party votes and votes.
+
+For the higher challenger spending,it indicate that the challenger has more money on advertisement, which can be viewed as a threat for incumbent. Therefore,it will reduce the two-party votes and votes. 
+
+### (b)
+The OLS result is as follow:
+```{r message=FALSE, warning=FALSE}
+spending.b = glm(vote~democrat+hq+vote_1+lispend+lcspend, data=spending)
+summary(spending.b, type='HC1')
+```
+After we run the OLS regression and compare the results with our hypothesis, we found that it is same as what we predict. However, `lispend` is not significant because its p-value is bigger than 5%. 
+
+### (c)
+The first reason could be location of incumbent's office. For example, a candidate from an urban New York riding typically spends more than a candidate from rural Montana just because it is more expensive to run ads in New York than Montana. Therefore, location of incumbent's office will affect its spending and the vote.
+
+Another reason is traveling time and expense. If incumbent spend more time on traveling and advertising, it is more likely to increase the spending and vote rate.
+
+### (d)
+The variable incumbent spending in the previous election cycle (`lispend1`) is likely correlated with current incumbent spending and it typically not related to current election's challenger quality. Therefore, we can fix the endogenity issue by isolating the part of incumbent spending that is uncorrelated with the error terms using `lispend`, provided that we still include controls for geographical variables.
+
+### (e)
+We run 2 separate OLS and see what happens. First stage has `lispend` as the response variable with `democrat`, `hq`, `vote_1` and `lcspend` as control. `lispend1` is proposed as an instrument. The output is as follow:
+```{r message=FALSE, warning=FALSE}
+spending.e = glm(lispend~democrat+hq+vote_1+lcspend+lispend1, data=spending)
+summary(spending.e, type='HC1')
+```
+Now, we run the second stage OLS with `vote` as the response and the same controls in the first stage as independent variables along with the exogenous `lispend_pred` from the first stage. The output is as follow:
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+lispend_pred = predict(spending.e, data=spending)
+spending = cbind(spending, lispend_pred)
+spending
+```
+```{r message=FALSE, warning=FALSE}
+spending.e2 = glm(vote~democrat+hq+vote_1+lispend_pred+lcspend, data=spending)
+summary(spending.e2, type='HC1')
+```
+
+###(f)
+Now, we run 2SLS directly in R without separating the 2 stages. The output is as follow:
+```{r message=FALSE, warning=FALSE}
+spending.f = ivreg(vote~democrat+hq+vote_1+lispend+lcspend | democrat+hq+vote_1+lispend1+lcspend, data=spending)
+summary(spending.f, type='HC1', diagnostics=TRUE)
+```
+Like part (e), `lispend` is significant with the same slope coefficient of 2.00637. However, it has a slightly larger standard error than (g) because OLS standard errors assume unconditional homoskedasticity while TSLS is conditional on Z. In other words, we have to use inconsistent standard errors for TSLS. Either of these results are not unexpected given the model specifications. 
+
+### (g)
+For a instrument to be valid, it needs to relevant and exogenous.
+
+To test if instrument is relevant, we compute the first-stage F-statistic from the first stage of OLS.
+
+$H_0: \beta_{lispend1} = 0$ (weak relevance)  
+$H_0: \beta_{lispend1} \neq 0$ (strong relevance)
+
+The test output is as follow. 
+```{r}
+linearHypothesis(spending.e, "lispend1=0", test="F")
+```
+
+We reject the null and conclude that the instrument is strong because F is bigger than 10. We could've used the output from the "weak instruments" test in (f) and obtained the same result. It is relevant.
+
+Then, we can test for the exogeneity of `lispend1` by computing the correlation between `lispend1` and the residuals from the OLS as follow:
+```{r}
+cor.test(spending$lispend1, spending.b$residuals, method=c("pearson"))
+```
+Based on the p-value of 0.05205, we conclude that `lispend1` is not correlated with the error terms of the OLS, therefore it is exogenous.
+
+Based on the result of TSLS, `lispend1` is a valid instrument for the endogenous `lispend`.
+
+### (h)
+Re refit a TSLS, but this time with 2 instruments `lispend1` and `hq`.
+```{r message=FALSE, warning=FALSE}
+spending.h = ivreg(vote~democrat+lcspend+vote_1+lispend | democrat+vote_1+lcspend+lispend1+hq, data=spending)
+summary(spending.h, type='HC1', diagnostics=TRUE)
+```
+`lispend` is endogenous in this model, since the Wu-Hausman test can be rejected.
+
+To test if instrument is relevant, The "Weak instruments" p-value of near 0 and F-test statistic of 145.668 suggests that `lscpend` is indeed relevant as an instrument for `lispend`. We reject the null and conclude that the instruments are strong because F is still bigger than 10.
+
+Then, we conduct the second-stage J-test to test for exogeneity and see if we have over-identified.
+
+$H_0$: Both lispend1 and hq are uncorrelated with the error terms (instruments are exogenous)  
+$H_1$: lispend1 or/and hq are correlated with the error terms (at least one instrument is endogenous)  
+
+The result of the J-test is given in the output as "Sargan" with the test-statistic of 10.547 and p-value of 0.00116. At least one of the instruments is endogenous and should be removed from the model. Comparing this result to (g), we can conclude that we can obtain a good TSLS model with only `lispend1` as the instrument. Whether or not `hq` is a good instrument on its own needs to be re-fitted.
+
+We could also compute the p-value by hand as per the Anderson-Rubin J-test and obtain the same result.
+
+Therefore, using both `lispend1` and `hq` together results in over-identification and it makes at least one of them endogenous. We can definitely use `lispend` alone as an instrument, but we have to conduct further tests on `hq` to conclude the same thing.
+
+```{r}
+spending.h2 = glm(residuals(spending.h)~democrat+vote_1+lcspend+lispend1+hq, data=spending)
+spendingLHTest = linearHypothesis(spending.h2, c("lispend1 = 0", "hq = 0"), test="Chisq")
+pchisq(spendingLHTest[2, 3], df = 1, lower.tail = FALSE)
+```
+
+### (i)
+We would suggest any geographical variables as instrument for both incumbent spending and challenger spending, such as the location of office, the state that candidate runs for campaign. As mentioned in part(c), these geographical factors are correlated with incumbent spending(lispend), but it won't affect other variables in the regression. They are also relevant with the traveling time and expense. For example,if the incumbent's office is at a place with well-developed transit system, incumbent is more likely to travel around, which increases the spending. Therefore, location can overcome both reasons in part(c) and it is a valid instrument. 
+
+Same reason can be applied to challenger spending. The challenger's office location, and traveling time and expense could be the reasons that challenger spending is endogenous. 
