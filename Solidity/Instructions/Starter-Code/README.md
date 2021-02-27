@@ -61,6 +61,8 @@ In the `Deploy` tab in Remix, deploy the contract to your local Ganache chain by
 You will need to fill in the constructor parameters with your designated `employee` addresses.
 
 Test the `deposit` function by sending various values. Keep an eye on the `employee` balances as you send different amounts of ether to the contract and ensure the logic is executing properly.
+
+
 ![Verification Balance](Images/verify.jpg)
 ![After Transaction](Images/After.jpg)
 
