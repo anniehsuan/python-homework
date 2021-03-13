@@ -2,11 +2,9 @@
 
 ## Applying machine learning into the stock market
 
-### Team Members: Syed Naqvi, Minh Tran, Rodrigo Guazzelli, Hsuan Liu, Abdullah Mamun
-
 *The project is for study propose only*
 
-[Project Presentation](https://github.com/Minhtran18/Project_2/tree/master/Presentation)
+
 
 ### Summary
 
@@ -49,8 +47,7 @@ New Libraries: Dash, Tkinter, Quantstats.
 
 ### 5. Dashboard Visualization
 
-![Dashboard](/Images/DemoDashboard-AAPL.mp4)
-![Dashboard_pic](/Images/dashboard_picture.jpg)
+![Dashboard_pic](/Images/DemoDashboard-AAPL.gif)
 
 ### 6. Understanding the Theory
 
